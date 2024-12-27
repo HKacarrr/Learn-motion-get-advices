@@ -1,0 +1,146 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        body{
+            background-image: url("{{ asset('asset/images/motion-analyze-bg.png') }}");
+            background-position: center;
+        }
+
+
+        .container{
+            width: 45rem!important;
+        }
+
+
+        textarea{
+            border: 1px dashed #b6b6b6 !important;
+            border-radius: 13px;
+            padding: 8px;
+            resize: none;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus{
+            border: 1px solid #363636;
+            outline: none;
+        }
+
+        button#submit-button{
+            background: #ffffff;
+            border: 1px solid #3F3770;
+            color: #3F3770;
+        }
+
+        button#submit-button:hover{
+            background: #3F3770;
+            border: 1px solid #3F3770;
+            color: #ffffff;
+        }
+
+
+        p{
+            color: #3F3770;
+        }
+
+        .header-text{
+            color: #3F3770!important;
+        }
+
+
+        #advice-area{
+            overflow: auto;
+            overflow-y: scroll;
+            max-height: 25rem;
+            white-space: pre-line;
+        }
+    </style>
+{% endblock %}
+
+
+{% block body %}
+    <div class="container my-5">
+        <div class="position-relative p-5 text-center text-muted bg-body border border-dashed rounded-5">
+            <h1><img width="150" src="{{ asset('asset/images/motion-analyze-logo.png') }}" alt=""></h1>
+            <h1 class="text-body-emphasis header-text">Learn Your Feelings and Get Advice</h1>
+            <p class="col-lg-10 mx-auto mb-4">
+                Write down your mood in the moment and get a clear emotional analysis. Let us even offer you a few activities
+            </p>
+
+            <div class="mb-5">
+                <textarea id="personal-text" cols="60" rows="8"></textarea>
+            </div>
+
+            <button id="submit-button" onclick="sendText()" class="btn px-5 mb-5" type="button">
+                Learn for Yourself
+            </button>
+
+
+            <div id="loader-area" class="d-none">
+                <div class="spinner-border" role="status">
+                    <span class="sr-only"></span>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="response-area" class="position-relative p-3 mt-5 text-center text-muted bg-body border border-dashed rounded-5 d-none">
+            <div id="motions" class="d-flex w-100 justify-content-between pb-3" style="border-bottom: 1px solid #3F3770">
+                <div id="negative-area"><img class="mb-1" src="{{ asset('asset/images/negative.png') }}" width="20"> <span id="negative-value">00.00</span>%</div>
+                <div id="neutral-area"><img class="mb-1" src="{{ asset('asset/images/neutral.png') }}" width="20"> <span id="neutral-value">00.00</span>%</div>
+                <div id="positve-area"><img class="mb-1" src="{{ asset('asset/images/positive.png') }}" width="20"> <span id="positive-value">00.00</span>%</div>
+            </div>
+            <div id="advice-area" class="mt-3"></div>
+        </div>
+    </div>
+{% endblock %}
+
+
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        function sendText()
+        {
+            let positiveValueArea = $("#positive-value")
+            let neutralValueArea = $("#neutral-value")
+            let negativeValueArea = $("#negative-value")
+            let adviceArea = $("#advice-area")
+            let responseArea = $("#response-area")
+            let loaderArea = $("#loader-area")
+            let prompt = $("#personal-text").val();
+            console.log("Prompt : ", prompt);
+
+            responseArea.addClass("d-none");
+            loaderArea.removeClass("d-none");
+
+            $.ajax({
+                'url' : '{{ path('motion_analyze') }}',
+                'type' : 'POST',
+                'data' : {prompt: prompt},
+                'success' : function(data) {
+                    let response = data.response;
+                    let motions = data.motions;
+                    let positiveVal = motions.positive;
+                    let neutralVal = motions.neutral;
+                    let negativeVal = motions.negative;
+                    console.log("Response : ", response);
+                    adviceArea.text(response);
+
+                    positiveValueArea.text(positiveVal);
+                    neutralValueArea.text(neutralVal);
+                    negativeValueArea.text(negativeVal);
+
+                    responseArea.removeClass("d-none")
+                    loaderArea.addClass("d-none")
+                    console.log("Prompt", data)
+                },
+                'error' : function(request,error)
+                {
+                    console.log("Error : ", error);
+                }
+            });
+        }
+    </script>
+{% endblock %}
